@@ -1,6 +1,6 @@
-module gml.object;
+module gml.base_object;
 
-import gml.layer, gml.maths, gml.sprite;
+import gml.layer, gml.maths, gml.room, gml.sprite;
 
 import core.memory;
 import std.math;
@@ -14,7 +14,7 @@ void quit(){
 	other = null;
 }
 
-class GMObject{
+class BaseObject{
 	bool visible = true;
 	bool solid;
 	const bool persistent;
@@ -22,91 +22,90 @@ class GMObject{
 	LayerID layer;
 	int[12] alarm;
 	
-	final @property float direction() nothrow @nogc pure @safe => datan2(vSpeed, hSpeed);
-	final @property direction(float val) nothrow @nogc pure @safe{
+	final @property double direction() nothrow @nogc pure @safe => datan2(vSpeed, hSpeed);
+	final @property direction(double val) nothrow @nogc pure @safe{
 		const rad = val.degToRad();
 		const s = speed;
 		hSpeed = cos(rad) * s;
 		vSpeed = sin(rad) * s;
 	}
-	float friction = 0f;
-	float gravity = 0f;
-	float gravityDirection = 0f;
+	double friction = 0.0;
+	double gravity = 0.0;
+	double gravityDirection = 0.0;
 	alias gravity_direction = gravityDirection;
-	float hSpeed;
+	double hSpeed;
 	alias hspeed = hSpeed;
-	float vSpeed;
+	double vSpeed;
 	alias vspeed = vSpeed;
-	final @property float speed() nothrow @nogc pure @safe => sqrt(hSpeed*hSpeed + vSpeed*vSpeed);
-	final @property speed(float val) nothrow @nogc pure @safe{
+	final @property double speed() nothrow @nogc pure @safe => sqrt(hSpeed*hSpeed + vSpeed*vSpeed);
+	final @property speed(double val) nothrow @nogc pure @safe{
 		const rad = atan2(vSpeed, hSpeed);
 		hSpeed = cos(rad) * val;
 		vSpeed = sin(rad) * val;
 	}
-	float xStart = 0f;
+	double xStart = 0.0;
 	alias xstart = xStart;
-	float yStart = 0f;
+	double yStart = 0.0;
 	alias ystart = yStart;
-	float x = 0f;
-	float y = 0f;
-	float xPrevious;
+	double x = 0.0;
+	double y = 0.0;
+	double xPrevious;
 	alias xprevious = xPrevious;
-	float yPrevious;
+	double yPrevious;
 	alias yprevious = yPrevious;
 	
-	SpriteAsset spriteIndex = new SpriteAsset(-1);
+	SpriteAsset spriteIndex;
 	alias sprite_index = spriteIndex;
-	final @property double spriteWidth() nothrow @nogc pure @safe => double.nan * imageXScale; //TODO: get width
+	@property double spriteWidth() nothrow @nogc pure @safe => double.nan;
 	alias sprite_width = spriteWidth;
-	final @property double spriteHeight() nothrow @nogc pure @safe => double.nan * imageYScale;
+	@property double spriteHeight() nothrow @nogc pure @safe => double.nan;
 	alias sprite_height = spriteHeight;
-	final @property double spriteXOffset() nothrow @nogc pure @safe => double.nan * imageXScale; //TODO: get width
+	@property double spriteXOffset() nothrow @nogc pure @safe => double.nan;
 	alias sprite_xoffset = spriteXOffset;
-	final @property double spriteYOffset() nothrow @nogc pure @safe => double.nan * imageYScale;
+	@property double spriteYOffset() nothrow @nogc pure @safe => double.nan;
 	alias sprite_yoffset = spriteYOffset;
 	float imageAlpha = 1f;
 	alias image_alpha = imageAlpha;
 	double imageAngle = 0.0;
 	alias image_angle = imageAngle;
-	long imageBlend = -1;
+	uint imageBlend = 0xFF_FF_FF;
 	alias image_blend = imageBlend;
-	int imageIndex = 0;
+	float imageIndex = 0f;
 	alias image_index = imageIndex;
-	final @property uint imageNumber() => 0; //TODO: get frame count
+	@property size_t imageNumber() => spriteGetNumber(spriteIndex);
 	alias image_number = imageNumber;
 	float imageSpeed = 1f;
 	alias image_speed = imageSpeed;
-	float imageXScale = 1f;
+	double imageXScale = 1.0;
 	alias image_xscale = imageXScale;
-	float imageYScale = 1f;
+	double imageYScale = 1.0;
 	alias image_yscale = imageYScale;
-	SpriteAsset maskIndex = new SpriteAsset(-1);
+	
+	SpriteAsset maskIndex;
 	alias mask_index = maskIndex;
-	final @property int bboxBottom() nothrow @nogc pure @safe => cast(int)ceil(y); //TODO: get bbox
+	@property int bboxBottom() nothrow @nogc pure @safe => cast(int)ceil(y);
 	alias bbox_bottom = bboxBottom;
-	final @property int bboxLeft() nothrow @nogc pure @safe => cast(int)floor(x);
+	@property int bboxLeft() nothrow @nogc pure @safe => cast(int)floor(x);
 	alias bbox_left = bboxLeft;
-	final @property int bboxRight() nothrow @nogc pure @safe => cast(int)ceil(x);
+	@property int bboxRight() nothrow @nogc pure @safe => cast(int)ceil(x);
 	alias bbox_right = bboxRight;
-	final @property int bboxTop() nothrow @nogc pure @safe => cast(int)floor(y);
+	@property int bboxTop() nothrow @nogc pure @safe => cast(int)floor(y);
 	alias bbox_top = bboxTop;
 	
-	this(bool persistent){
+	this(bool persistent) nothrow pure @safe{
 		this.persistent = persistent;
 	}
 	
-	final void instanceDestroy(){
+	void instanceDestroy(){
 		.instanceDestroy(this);
 	}
 	alias instance_destroy = instanceDestroy;
 	
-	final void builtInStep(){
+	void builtInStep(){
 		//TODO: this
 	}
 	
-	final void drawSelf(){
-		//TODO: this
-	}
+	void drawSelf(){}
 	alias draw_self = drawSelf;
 	
 	void onPreStep(){}
@@ -140,24 +139,24 @@ class GMObject{
 	void onDestroy(){}
 }
 
-GMObject self;
-GMObject other;
+BaseObject self;
+BaseObject other;
 
-Obj instanceCreateLayer(Obj)(float x, float y, LayerID layerID) nothrow pure @safe{
+Obj instanceCreateLayer(Obj)(double x, double y, LayerID layerID) nothrow pure @safe{
 	auto obj = new Obj();
 	obj.x = x;
 	obj.y = y;
 	obj.layer = layerID;
 }
-Obj instanceCreateLayer(Obj)(float x, float y, string layerID){
+Obj instanceCreateLayer(Obj)(double x, double y, string layerID) @safe{
 	auto obj = new Obj();
 	obj.x = x;
 	obj.y = y;
-	//obj.layer = layerID;
+	obj.layer = layerGetID(layerID);
 }
 alias instance_create_layer = instanceCreateLayer;
 
-Obj instanceCreateDepth(Obj)(float x, float y, float depth){
+Obj instanceCreateDepth(Obj)(double x, double y, float depth){
 	auto obj = new Obj();
 	obj.x = x;
 	obj.y = y;
@@ -169,6 +168,6 @@ void instanceDestroy(Obj)(Obj id, bool executeEventFlag=true){
 	if(executeEventFlag){
 		id.onDestroy();
 	}
-	//Add to instance free queue
+	//TODO: Add to room instance free queue
 }
 alias instance_destroy = instanceDestroy;

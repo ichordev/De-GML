@@ -1,12 +1,11 @@
 module gml.draw;
 
 public import
-	gml.draw.colour,
 	gml.draw.forms,
 	gml.draw.gpu,
 	gml.draw.texture;
 
-import gml.camera, gml.collision, gml.display, gml.game, gml.input.mouse, gml.options, gml.room, gml.window;
+import gml.camera, gml.collision, gml.colour, gml.display, gml.game, gml.input.mouse, gml.options, gml.room, gml.window;
 
 import core.time, core.thread;
 import std.algorithm.comparison, std.exception, std.format, std.math, std.string;
@@ -85,7 +84,6 @@ void init(){
 	VertPosCol.init();
 	VertPosColTex.init();
 	
-	gml.draw.colour.init();
 	gml.draw.forms.init();
 	gml.draw.gpu.init();
 	gml.draw.texture.init();
@@ -95,7 +93,6 @@ void quit(){
 	gml.draw.texture.quit();
 	gml.draw.gpu.quit();
 	gml.draw.forms.quit();
-	gml.draw.colour.quit();
 	
 	shelper.unloadAllShaderPrograms();
 	bgfx.destroy(u_colour);
@@ -326,6 +323,39 @@ struct VertPosColTex{
 	}
 }
 
+uint drawGetColour() nothrow @nogc @safe =>
+	(cast(ubyte)round(gpuState.col[0] * 255f) <<  0) |
+	(cast(ubyte)round(gpuState.col[1] * 255f) <<  8) |
+	(cast(ubyte)round(gpuState.col[2] * 255f) << 16);
+alias draw_get_colour = drawGetColour;
+
+float drawGetAlpha() nothrow @nogc @safe =>
+	gpuState.col[3];
+
+void drawClear(uint col) nothrow @nogc{
+	gpuState.nextBgfxView();
+	bgfx.setViewClear(gpuState.bgfxView, Clear.colour | Clear.depth, (.col(col) << 8) | 0xFF);
+}
+alias draw_clear = drawClear;
+
+void drawClearAlpha(uint col, float alpha) nothrow @nogc{
+	gpuState.nextBgfxView();
+	bgfx.setViewClear(gpuState.bgfxView, Clear.colour | Clear.depth, (.col(col) << 8) | cast(ubyte)round(alpha * 255f));
+}
+alias draw_clear_alpha = drawClearAlpha;
+
+void drawSetAlpha(float alpha) nothrow @nogc @safe{
+	gpuState.col[3] = clamp(alpha, 0f, 1f);
+}
+alias draw_set_alpha = drawSetAlpha;
+
+void drawSetColour(uint col) nothrow @nogc @safe{
+	gpuState.col[0] = ((col >>  0) & 0xFF) / 255f;
+	gpuState.col[1] = ((col >>  8) & 0xFF) / 255f;
+	gpuState.col[2] = ((col >> 16) & 0xFF) / 255f;
+}
+alias draw_set_colour = drawSetColour;
+
 Mat4 matrixBuildProjectionOrtho(float w, float h, float zNear, float zFar) nothrow @nogc =>
 	Mat4.projOrtho(Vec2!float(0f, 0f), Vec2!float(w, h), zNear, zFar, bgfx.getCaps().homogeneousDepth);
 alias matrix_build_projection_ortho = matrixBuildProjectionOrtho;
@@ -362,7 +392,6 @@ Vec2!int reverseEngineerMousePos(Viewport port, Vec2!ushort portPos, Vec2!ushort
 	pos.y = -pos.y;
 	pos = (proj * view).invert() * pos;
 	
-	import std;debug writeln(pos);
 	return cast(Vec2!int)pos;
 }
 

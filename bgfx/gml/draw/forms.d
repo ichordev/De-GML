@@ -1,6 +1,6 @@
 module gml.draw.forms;
 
-import gml.camera, gml.draw;
+import gml.camera, gml.colour, gml.draw;
 
 import std.algorithm.comparison, std.math;
 import ic.calc, ic.vec;

@@ -17,7 +17,6 @@ void main(){
 	cameraSetProjMat(myCam2, matrixBuildProjectionOrtho(50, 50, 700, 500, -16000f, 16000f));
 	
 	gml.room.orderedRooms ~= Room(
-		ordered: true,
 		size: Vec2!uint(800, 600),
 		useViews: true,
 		viewports: [

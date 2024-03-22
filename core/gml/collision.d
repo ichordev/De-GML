@@ -1,6 +1,6 @@
 module gml.collision;
 
-import std.algorithm.comparison, std.math;
+import std.algorithm.comparison, std.math, std.sumtype;
 
 void init(){
 	
@@ -9,6 +9,24 @@ void init(){
 void quit(){
 	
 }
+
+enum BBoxKind{
+	rectangular,         ///A rectangular (non-rotating) rectangle collision mask shape
+	rectangularRotated,  ///A rectangular collision mask shape that rotates along with `imageAngle`
+	ellipse,             ///An elliptical collision mask shape
+	diamond,             ///A diamond collision mask shape
+	precise,             ///A precise collision mask, where the mask will conform to the non-transparent pixels of the sprite
+	precisePerFrame,     ///A precise collision mask that changes for each frame of the sprite
+};
+alias bboxkind = BBoxKind;
+
+enum BBoxMode{
+	automatic,              ///The bounding box will be calculated automatically, based on the tolerance setting for the sprite
+	fullImage,              ///The bounding box will be set to use the full width and height of the sprite, regardless of the tolerance and "empty" pixels
+	fullimage = fullImage,
+	manual,                 ///The bounding box has been set manually to user defined values
+}
+alias bboxmode = BBoxMode;
 
 N pointLineDistance(N)(N px, N py, N x1, N y1, N x2, N y2) nothrow @nogc pure @safe{
 	N a = px - x1;

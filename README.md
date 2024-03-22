@@ -74,7 +74,8 @@ try{
 ### Rooms
 Room Assets are pointers in De-GML, so instead of checking if they are `== -1`, you should check if they are `is null`.
 
-
+### Sprites
+Sprite Assets are pointers in De-GML, so instead of checking if they are `== -1`, you should check if they are `is null`.
 
 ## Conversion Cheatsheet
 

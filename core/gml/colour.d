@@ -1,10 +1,7 @@
-module gml.draw.colour;
-
-import gml.draw;
+module gml.colour;
 
 import std.algorithm.comparison, std.math;
 import ic.ease: lerp;
-import bindbc.bgfx;
 
 void init(){
 	
@@ -109,15 +106,6 @@ unittest{
 
 //TODO: draw_getpixel_ext
 
-uint drawGetColour() nothrow @nogc @safe =>
-	(cast(ubyte)round(gpuState.col[0] * 255f) <<  0) |
-	(cast(ubyte)round(gpuState.col[1] * 255f) <<  8) |
-	(cast(ubyte)round(gpuState.col[2] * 255f) << 16);
-alias draw_get_colour = drawGetColour;
-
-float drawGetAlpha() nothrow @nogc @safe =>
-	gpuState.col[3];
-
 //Create colours from raw input values
 
 uint makeColourHSV(float hue, float sat, float val) nothrow @nogc pure @safe{
@@ -137,8 +125,8 @@ unittest{
 }
 
 uint makeColourRGB(float red, float green, float blue) nothrow @nogc pure @safe =>
-	(min(cast(uint)round(red),   255) <<  0) | 
-	(min(cast(uint)round(green), 255) <<  8) | 
+	(min(cast(uint)round(red),   255) <<  0) |
+	(min(cast(uint)round(green), 255) <<  8) |
 	(min(cast(uint)round(blue),  255) << 16);
 alias make_colour_rgb = makeColourRGB;
 
@@ -159,29 +147,3 @@ uint mergeColour(uint col1, uint col2, double amount) nothrow @nogc pure @safe{
 		(cast(ubyte)lerp(c1f[2], c2f[2], amount) << 16);
 }
 alias merge_colour = mergeColour;
-
-//Set the various different options for drawing to the screen
-
-void drawClear(uint col) nothrow @nogc{
-	gpuState.nextBgfxView();
-	bgfx.setViewClear(gpuState.bgfxView, Clear.colour | Clear.depth, (.col(col) << 8) | 0xFF);
-}
-alias draw_clear = drawClear;
-
-void drawClearAlpha(uint col, float alpha) nothrow @nogc{
-	gpuState.nextBgfxView();
-	bgfx.setViewClear(gpuState.bgfxView, Clear.colour | Clear.depth, (.col(col) << 8) | cast(ubyte)round(alpha * 255f));
-}
-alias draw_clear_alpha = drawClearAlpha;
-
-void drawSetAlpha(float alpha) nothrow @nogc @safe{
-	gpuState.col[3] = clamp(alpha, 0f, 1f);
-}
-alias draw_set_alpha = drawSetAlpha;
-
-void drawSetColour(uint col) nothrow @nogc @safe{
-	gpuState.col[0] = ((col >>  0) & 0xFF) / 255f;
-	gpuState.col[1] = ((col >>  8) & 0xFF) / 255f;
-	gpuState.col[2] = ((col >> 16) & 0xFF) / 255f;
-}
-alias draw_set_colour = drawSetColour;
